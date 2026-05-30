@@ -8,7 +8,6 @@ import {
   Controls,
   MiniMap,
   ReactFlow,
-  ReactFlowProvider,
   useReactFlow,
   type EdgeTypes,
   type NodeMouseHandler,
@@ -140,11 +139,9 @@ function CanvasFlow() {
 }
 
 export function CanvasPane() {
-  return (
-    <ReactFlowProvider>
-      <CanvasFlow />
-    </ReactFlowProvider>
-  );
+  // The ReactFlowProvider lives at the app root (see App.tsx) so the palette
+  // and canvas share one flow instance.
+  return <CanvasFlow />;
 }
 
 export default CanvasPane;

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { ReactFlowProvider } from "@xyflow/react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -31,36 +32,40 @@ export function App() {
   }, [loadPathway]);
 
   return (
-    <TooltipProvider>
-      <div className="flex h-full flex-col">
-        {/* Top bar */}
-        <header className="flex h-12 shrink-0 items-center gap-3 border-b px-4">
-          <span className="text-sm font-semibold tracking-tight">
-            Maestro Pathway Builder
-          </span>
-          <PathwayMenu />
-        </header>
+    // One ReactFlowProvider wraps the whole app so the palette (Cmd-K insert)
+    // and the canvas share a single flow instance.
+    <ReactFlowProvider>
+      <TooltipProvider>
+        <div className="flex h-full flex-col">
+          {/* Top bar */}
+          <header className="flex h-12 shrink-0 items-center gap-3 border-b px-4">
+            <span className="text-sm font-semibold tracking-tight">
+              Maestro Pathway Builder
+            </span>
+            <PathwayMenu />
+          </header>
 
-        {/* Drift banner (renders only when the loaded pathway has drift) */}
-        <DriftBanner />
+          {/* Drift banner (renders only when the loaded pathway has drift) */}
+          <DriftBanner />
 
-        {/* Three-pane shell */}
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
-          <ResizablePanel defaultSize={20} minSize={12}>
-            <PalettePane />
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={55} minSize={30}>
-            <CanvasPane />
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={25} minSize={15}>
-            <InspectorPane />
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-      <Toaster />
-    </TooltipProvider>
+          {/* Three-pane shell */}
+          <ResizablePanelGroup direction="horizontal" className="flex-1">
+            <ResizablePanel defaultSize={20} minSize={12}>
+              <PalettePane />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={55} minSize={30}>
+              <CanvasPane />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={25} minSize={15}>
+              <InspectorPane />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+        <Toaster />
+      </TooltipProvider>
+    </ReactFlowProvider>
   );
 }
 

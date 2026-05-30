@@ -104,6 +104,7 @@ export interface PathwayState {
 
   // Saved runs
   saveRun: (name: string) => void;
+  setSavedRuns: (runs: SavedRun[]) => void;
 }
 
 const initialMeta = makeEmptyPathway("untitled", "Untitled", catalogVersion).meta;
@@ -262,6 +263,8 @@ export const usePathwayStore = create<PathwayState>()(
         };
         set({ savedRuns: [...get().savedRuns, run] });
       },
+
+      setSavedRuns: (runs) => set({ savedRuns: runs }),
     }),
     {
       limit: 100,

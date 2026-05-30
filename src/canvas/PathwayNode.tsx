@@ -6,30 +6,12 @@
 
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import {
-  Activity,
-  ClipboardCheck,
-  Flag,
-  GitBranch,
-  HelpCircle,
-  LogIn,
-  Pill,
-  type LucideIcon,
-} from "lucide-react";
-import type { BlockType } from "@/schema/pathway-schema";
+import { HelpCircle } from "lucide-react";
 import { getBlock, getBranches } from "@/state/catalog";
 import { cn } from "@/lib/utils";
+import { BLOCK_TYPE_ICON } from "@/lib/blockIcons";
 import { Badge } from "@/components/ui/badge";
 import type { FlowNode } from "@/state/usePathwayStore";
-
-const TYPE_ICON: Record<BlockType, LucideIcon> = {
-  entry: LogIn,
-  assessment: ClipboardCheck,
-  decision: GitBranch,
-  treatment: Pill,
-  monitoring: Activity,
-  outcome: Flag,
-};
 
 export const PathwayNode = memo(function PathwayNode({
   data,
@@ -48,7 +30,7 @@ export const PathwayNode = memo(function PathwayNode({
     );
   }
 
-  const Icon = TYPE_ICON[def.type] ?? HelpCircle;
+  const Icon = BLOCK_TYPE_ICON[def.type] ?? HelpCircle;
   const branchLabel =
     data.branchSelection &&
     getBranches(def.id).find((b) => b.id === data.branchSelection)?.label;

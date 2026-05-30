@@ -40,7 +40,7 @@ jobs:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Catalog source ↔ generated JSON
@@ -57,7 +57,7 @@ jobs:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Validate catalog
@@ -74,7 +74,7 @@ jobs:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
@@ -123,7 +123,7 @@ jobs:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Dry-run any pending migrations
@@ -141,7 +141,7 @@ jobs:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 

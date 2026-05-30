@@ -60,6 +60,11 @@ export interface PathwayEdgeData {
 export type FlowNode = Node<PathwayNodeData>;
 export type FlowEdge = Edge<PathwayEdgeData>;
 
+/** A partial node update — node fields plus a shallow-merged data patch. */
+export type NodeUpdate = Partial<Omit<FlowNode, "data">> & {
+  data?: Partial<PathwayNodeData>;
+};
+
 export interface SavedRun {
   id: string;
   name: string;
@@ -87,7 +92,7 @@ export interface PathwayState {
   onNodesChange: (changes: NodeChange<FlowNode>[]) => void;
   onEdgesChange: (changes: EdgeChange<FlowEdge>[]) => void;
   addNode: (input: { blockId: string; position: { x: number; y: number } }) => string;
-  updateNode: (nodeId: string, partial: Partial<FlowNode>) => void;
+  updateNode: (nodeId: string, partial: NodeUpdate) => void;
   removeNode: (nodeId: string) => void;
   connect: (connection: Connection) => void;
 

@@ -54,3 +54,6 @@ pathway-builder-kit/
 Grayscale 60/30 (neutral-50/100 + neutral-900). The 10% accent is `#FF2D95` (the pink already used in the prototype). The six block categories keep their original semantic colors (pink/cyan/green/yellow/violet/mint) as a 4px left-border or chip — not as fill — so the accent rule stays intact while the domain coding survives.
 
 See `docs/library-recommendations.md` for the why-this-library writeups.
+
+## PREVIEW
+https://rex593.github.io/maestro-playground/

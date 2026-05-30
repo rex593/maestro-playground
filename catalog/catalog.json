@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "1.0.0",
+  "updatedAt": "2026-05-30T03:13:24.568Z",
+  "blocks": [
+    {
+      "id": "entry_block",
+      "type": "entry",
+      "label": "Entry Block",
+      "shortLabel": "Entry",
+      "description": "Top-of-funnel hub. Branches to entry routes.",
+      "costPerPatient": 0,
+      "riskReduction": 0,
+      "isEntryHub": true,
+      "paramSchema": [],
+      "defaultParams": {}
+    },
+    {
+      "id": "entry_awv",
+      "type": "entry",
+      "label": "Annual Wellness Visit",
+      "shortLabel": "AWV",
+      "costPerPatient": 175,
+      "riskReduction": 2,
+      "cpt": "G0438",
+      "isEntryRoute": true,
+      "paramSchema": [],
+      "defaultParams": {}
+    },
+    {
+      "id": "moca",
+      "type": "assessment",
+      "label": "MoCA (Montreal Cognitive Assessment)",
+      "shortLabel": "MoCA",
+      "description": "30-point cognitive screen administered at intake.",
+      "costPerPatient": 45,
+      "evidenceGrade": "A",
+      "riskReduction": 4,
+      "cpt": "96132",
+      "paramSchema": [
+        {
+          "key": "cutoffScore",
+          "label": "Cutoff score",
+          "kind": "number",
+          "defaultValue": 26,
+          "min": 18,
+          "max": 30,
+          "step": 1
+        },
+        {
+          "key": "administeredBy",
+          "label": "Administered by",
+          "kind": "select",
+          "defaultValue": "trained_staff",
+          "options": [
+            {
+              "value": "trained_staff",
+              "label": "Trained staff"
+            },
+            {
+              "value": "physician",
+              "label": "Physician"
+            },
+            {
+              "value": "neuropsych",
+              "label": "Neuropsychologist"
+            }
+          ]
+        }
+      ],
+      "defaultParams": {
+        "cutoffScore": 26,
+        "administeredBy": "trained_staff"
+      }
+    },
+    {
+      "id": "junction_partner_handoff",
+      "type": "decision",
+      "label": "Partner Owns Next Step",
+      "shortLabel": "Partner Handoff",
+      "description": "Full handoff to partner after assessment. Partner controls workup, treatment, and follow-up.",
+      "costPerPatient": 0,
+      "riskReduction": 0,
+      "isGate": true,
+      "whoDecides": "Partner",
+      "paramSchema": [
+        {
+          "key": "handoffPayload",
+          "label": "Handoff payload",
+          "kind": "select",
+          "defaultValue": "summary_plus_biomarkers",
+          "options": [
+            {
+              "value": "summary_only",
+              "label": "Summary only"
+            },
+            {
+              "value": "summary_plus_biomarkers",
+              "label": "Summary + biomarkers"
+            },
+            {
+              "value": "full_protocol",
+              "label": "Full Mindspan protocol"
+            }
+          ]
+        }
+      ],
+      "defaultParams": {
+        "handoffPayload": "summary_plus_biomarkers"
+      }
+    }
+  ],
+  "branches": {
+    "junction_partner_handoff": [
+      {
+        "id": "partner_full_control",
+        "label": "Partner takes full control",
+        "whoDecides": "Partner",
+        "note": "Mirza: \"they may just want to buy the assessments and have control over the subsequent steps\"",
+        "effect": 1,
+        "isDefault": true
+      },
+      {
+        "id": "shared_oversight",
+        "label": "Shared oversight with Mindspan",
+        "whoDecides": "Partner",
+        "effect": 1.1
+      }
+    ],
+    "amyloid_status": [
+      {
+        "id": "amyloid_positive",
+        "label": "Amyloid positive → PET confirmation",
+        "whoDecides": "Auto",
+        "effect": 1,
+        "isDefault": true
+      },
+      {
+        "id": "amyloid_negative",
+        "label": "Amyloid negative → monitoring",
+        "whoDecides": "Auto",
+        "effect": 0.6
+      }
+    ]
+  }
+}

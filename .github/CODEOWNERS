@@ -1,0 +1,20 @@
+# CODEOWNERS — auto-routes PRs touching high-stakes paths to specific reviewers.
+# Catalog and schema edits are the highest-stakes changes because they affect
+# every committed pathway and every future migration.
+#
+# Replace @rex and @mirza with the real GitHub handles before committing.
+
+# Catalog is the contract — every pathway references it by id.
+/catalog/                @rex @mirza
+
+# Schema is the source of truth for the contract itself.
+/src/schema/             @rex
+
+# CI guard for the above.
+/.github/workflows/      @rex
+
+# Migrations get a wider net so anyone breaking the catalog has to write one.
+/catalog/migrations/     @rex @mirza
+
+# Everything else falls through to default reviewers.
+*                        @rex

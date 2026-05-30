@@ -1,0 +1,172 @@
+# .github/workflows/validate-pathways.yml
+# Validates the catalog and every pathway file in the repo on every PR + push.
+# Three jobs run in parallel:
+#   1. validate-catalog: parse catalog.json against CatalogDocumentSchema
+#   2. validate-pathways: parse every **/*.pathway.json against PathwayDocumentSchema
+#      AND run detectCatalogDrift against the catalog on the PR head
+#   3. check-drift: surface drift as a PR comment + fail if breaking drift exists
+
+name: Validate pathways
+
+on:
+  pull_request:
+    paths:
+      - "catalog/**"
+      - "**/*.pathway.json"
+      - "src/schema/**"
+      - "bin/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/validate-pathways.yml"
+  push:
+    branches: [main]
+
+# Note: `catalog-check` is a guard that the TS source of truth and the
+# generated JSON are in sync. It runs FIRST and blocks every other job so a
+# hand-edited catalog.json can never reach main.
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  catalog-sync:
+    name: Catalog TS/JSON in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Catalog source ↔ generated JSON
+        run: pnpm catalog:check
+
+  validate-catalog:
+    name: Validate catalog.json
+    runs-on: ubuntu-latest
+    needs: catalog-sync
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate catalog
+        run: pnpm validate:catalog catalog/catalog.json
+
+  validate-pathways:
+    name: Validate pathway files
+    runs-on: ubuntu-latest
+    needs: validate-catalog
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Discover pathway files
+        id: discover
+        run: |
+          FILES=$(find . -type f -name "*.pathway.json" -not -path "./node_modules/*" | sort)
+          if [ -z "$FILES" ]; then
+            echo "No pathway files found — skipping."
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          else
+            COUNT=$(echo "$FILES" | wc -l | tr -d ' ')
+            echo "Found $COUNT pathway file(s):"
+            echo "$FILES"
+            echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+            echo "files<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$FILES" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate each pathway
+        if: steps.discover.outputs.count != '0'
+        env:
+          FILES: ${{ steps.discover.outputs.files }}
+        run: |
+          set -e
+          FAIL=0
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            echo "→ $file"
+            if ! pnpm --silent validate:pathway "$file" catalog/catalog.json; then
+              FAIL=1
+            fi
+          done <<< "$FILES"
+          exit $FAIL
+
+  migrate-dry-run:
+    name: Migration dry-run
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    needs: validate-catalog
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Dry-run any pending migrations
+        run: pnpm migrate:dry
+
+  check-drift:
+    name: Catalog drift report
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    needs: validate-pathways
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate drift report
+        id: drift
+        run: |
+          pnpm --silent drift:report catalog/catalog.json > drift-report.md || true
+          {
+            echo "report<<EOF"
+            cat drift-report.md
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Post drift report as PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pathway-drift
+          message: |
+            ## Catalog drift report
+
+            ${{ steps.drift.outputs.report }}
+
+      - name: Fail on breaking drift
+        run: |
+          if grep -q "BREAKING:" drift-report.md; then
+            echo "::error::Pathway files reference blocks/branches that no longer exist in catalog.json"
+            exit 1
+          fi

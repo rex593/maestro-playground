@@ -204,11 +204,11 @@ export const GeographySchema = z.enum([
 
 export const PathwayMetaSchema = z.object({
   schemaVersion: z.literal(1),
-  id: z.string(),                           // slug, e.g. "agilon-judy-cognitive"
+  id: z.string(),                           // slug, e.g. "partner-cognitive-journey"
   title: z.string(),
   description: z.string().optional(),
   geography: GeographySchema.default("national"),
-  template: z.string().optional(),         // cognitive | diabetes | cv | agilon_journey | empty | custom
+  template: z.string().optional(),         // cognitive | diabetes | cv | partner_journey | empty | custom
   createdAt: z.string(),                   // ISO
   updatedAt: z.string(),                   // ISO
   authors: z.array(z.string()).default([]),

@@ -8,6 +8,8 @@
 // prototype (54 blocks across the six categories + gate branches). Supersedes the
 // v1.0.0 placeholder catalog. The four original ids (entry_block, entry_awv, moca,
 // junction_partner_handoff) are preserved.
+// v3.0.0: generalized the entry referral block — renamed `agilon_referral` ->
+// `partner_referral` (see catalog/migrations/3.0.0-generalize-partner-referral.ts).
 //
 // Editing rules:
 //   1. Never remove or rename a `block.id` without bumping the catalogVersion major
@@ -21,7 +23,7 @@ import type {
   Branch,
 } from "../src/schema/pathway-schema";
 
-const CATALOG_VERSION = "2.0.0";
+const CATALOG_VERSION = "3.0.0";
 
 /* ------------------------------------------------------------------ */
 /* Blocks (grouped by category, alphabetical within group)             */
@@ -29,11 +31,11 @@ const CATALOG_VERSION = "2.0.0";
 
 const ENTRY: BlockDefinition[] = [
   {
-    "id": "agilon_referral",
+    "id": "partner_referral",
     "type": "entry",
-    "label": "agilon RBE Member Referral",
-    "shortLabel": "agilon Referral",
-    "description": "MA-risk patient referred from agilon-partnered PCP group under risk-bearing entity governance. Pulls HIE + claims data on intake.",
+    "label": "Partner RBE Member Referral",
+    "shortLabel": "Partner Referral",
+    "description": "MA-risk patient referred from a partner-aligned PCP group under risk-bearing entity governance. Pulls HIE + claims data on intake.",
     "costPerPatient": 0,
     "evidenceGrade": "A",
     "riskReduction": 0,
@@ -840,7 +842,7 @@ const DECISION: BlockDefinition[] = [
     "type": "decision",
     "label": "Partner Touchpoint — Route Decision",
     "shortLabel": "Partner Route Touchpoint",
-    "description": "After MoCA + Digital Twin, partner group decides: take the results back to their own PCP, or route Judy to a Mindspan provider for the initial dementia-intake visit. Same data, their call.",
+    "description": "After MoCA + Digital Twin, partner group decides: take the results back to their own PCP, or route the patient to a Mindspan provider for the initial dementia-intake visit. Same data, their call.",
     "costPerPatient": 0,
     "evidenceGrade": "A",
     "riskReduction": 4,
@@ -849,7 +851,7 @@ const DECISION: BlockDefinition[] = [
     "paramSchema": [],
     "defaultParams": {
       "routes": [
-        "agilon_pcp",
+        "partner_pcp",
         "mindspan_provider"
       ]
     }

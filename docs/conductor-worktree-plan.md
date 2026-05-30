@@ -231,7 +231,7 @@ Tasks, in order:
 8. Verify CI: the workflow .github/workflows/validate-pathways.yml is already
    in the base scaffold. Run it locally with `act` or just push and check
    that all three jobs pass.
-9. Create examples/agilon-judy.pathway.json — port the agilon Judy's Story
+9. Create examples/partner-cognitive-journey.pathway.json — port the partner cognitive journey
    15-block template from the prototype's Ff array. Reference blocks by id
    only; set meta.catalogVersion to the current value. This is the
    regression fixture for both unit tests and CI.
@@ -241,7 +241,7 @@ MissingBlockNode component.
 
 Verify:
   pnpm validate:catalog catalog/catalog.json                          # OK
-  pnpm validate:pathway examples/agilon-judy.pathway.json catalog/catalog.json   # OK
+  pnpm validate:pathway examples/partner-cognitive-journey.pathway.json catalog/catalog.json   # OK
   pnpm drift:report catalog/catalog.json                              # ✓ everywhere
 Then break it: delete a referenced blockId from catalog.json and rerun —
 drift:report must print BREAKING and exit 1. Restore catalog, screenshot the
@@ -261,7 +261,7 @@ If two PRs collide on `App.tsx`, the second-to-merge owns the conflict resolutio
 
 ## 4. Conductor mechanics
 
-In Conductor, each task gets its own worktree and its own Claude Code session, so you can watch all four diffs in parallel from the unified view. Use the per-task chat to nudge any agent that's drifting (for instance: "use shadcn Slider not the native range input"). When all four PRs are green, merge in the order above, run `pnpm validate examples/agilon-judy.pathway.json` on `main` as a sanity check, then tag `v0.1.0`.
+In Conductor, each task gets its own worktree and its own Claude Code session, so you can watch all four diffs in parallel from the unified view. Use the per-task chat to nudge any agent that's drifting (for instance: "use shadcn Slider not the native range input"). When all four PRs are green, merge in the order above, run `pnpm validate examples/partner-cognitive-journey.pathway.json` on `main` as a sanity check, then tag `v0.1.0`.
 
 ## 5. Catalog ownership and drift policy
 
@@ -293,4 +293,4 @@ For a contributor adding a new pathway (not editing the catalog):
 
 ## 7. What's intentionally out of scope for v0.1.0
 
-The Snake easter egg, the agilon scripted narrative runner (chapter auto-scroll), the Present Mode auto-hide, and the Compare grid — all of these are second-pass features that depend on the four primitives above working. The agilon JSON fixture from `feat/io` keeps the option alive for v0.2.0 without blocking v0.1.0.
+The Snake easter egg, the partner scripted narrative runner (chapter auto-scroll), the Present Mode auto-hide, and the Compare grid — all of these are second-pass features that depend on the four primitives above working. The partner journey JSON fixture from `feat/io` keeps the option alive for v0.2.0 without blocking v0.1.0.

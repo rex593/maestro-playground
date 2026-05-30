@@ -125,7 +125,7 @@ You own these files (no other worktree touches them):
   src/io/MissingBlockNode.tsx
   src/io/DriftBanner.tsx
   src/io/PathwayMenu.tsx           (replace the Task 0 stub)
-  examples/agilon-judy.pathway.json
+  examples/partner-cognitive-journey.pathway.json
 
 You also extend src/state/usePathwayStore.ts with two actions: loadPathway and
 savePathway. Touch nothing else in that file.
@@ -197,17 +197,17 @@ Implementation steps:
      pnpm drift:report catalog/catalog.json
      pnpm migrate:dry
 
-8. examples/agilon-judy.pathway.json:
-   Port the agilon Judy's Story 15-block template from the prototype's `Ff`
+8. examples/partner-cognitive-journey.pathway.json:
+   Port the partner cognitive journey 15-block template from the prototype's `Ff`
    array (see the original uploaded HTML) into a real PathwayDocument.
    Nodes reference blocks by id only — do NOT bundle the catalog into the
    doc. Set meta.catalogVersion = the current value from src/state/catalog.ts.
-   Set meta.template = "agilon_journey" and meta.geography = "national".
+   Set meta.template = "partner_journey" and meta.geography = "national".
    This file MUST validate clean with:
-     pnpm validate:pathway examples/agilon-judy.pathway.json catalog/catalog.json
+     pnpm validate:pathway examples/partner-cognitive-journey.pathway.json catalog/catalog.json
    It MUST also pass `pnpm drift:report catalog/catalog.json`.
 
-9. Add a hard test: temporarily duplicate examples/agilon-judy.pathway.json
+9. Add a hard test: temporarily duplicate examples/partner-cognitive-journey.pathway.json
    as examples/_drift-fixture.pathway.json and rename a blockId in the copy
    to something the catalog doesn't have. Run `pnpm drift:report` — it must
    print "BREAKING" and exit 1. Then delete the fixture. Add a note in the
@@ -217,9 +217,9 @@ Out of scope: canvas rendering, palette UI, inspector UI. Those are Tasks 2–4.
 
 Verify before declaring done:
   - pnpm typecheck clean
-  - pnpm validate:pathway examples/agilon-judy.pathway.json catalog/catalog.json → OK
+  - pnpm validate:pathway examples/partner-cognitive-journey.pathway.json catalog/catalog.json → OK
   - pnpm drift:report → ✓ everywhere
-  - Hand-test: open the app, click "Open from file" with the agilon JSON.
+  - Hand-test: open the app, click "Open from file" with the partner journey JSON.
     Once Task 2 (canvas) merges this will visibly render; for now log the
     loaded doc to the console.
   - Screenshot of the PathwayMenu, the DriftBanner in a forced-drift state,
@@ -514,12 +514,12 @@ After all four:
 pnpm install
 pnpm catalog:build
 pnpm catalog:check
-pnpm validate:pathway examples/agilon-judy.pathway.json catalog/catalog.json
+pnpm validate:pathway examples/partner-cognitive-journey.pathway.json catalog/catalog.json
 pnpm drift:report catalog/catalog.json
 pnpm dev
 ```
 
-Hand-test: open the agilon Judy fixture, drag a new block from the palette,
+Hand-test: open the partner journey fixture, drag a new block from the palette,
 edit it, save to a new file, reload. Everything works → tag `v0.1.0`.
 
 ---

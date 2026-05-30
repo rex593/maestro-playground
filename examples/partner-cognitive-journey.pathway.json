@@ -1,34 +1,34 @@
 {
   "meta": {
     "schemaVersion": 1,
-    "id": "agilon-judy-cognitive",
-    "title": "agilon — Judy's Story (cognitive)",
-    "description": "15-block cognitive-decline journey for the agilon partner model, ported from the Mindspan Visual Care Pathway Builder prototype's agilon_journey template.",
+    "id": "partner-cognitive-journey",
+    "title": "Partner Cognitive Care Journey",
+    "description": "15-block cognitive-decline journey for a general risk-bearing partner model, from member referral through MoCA, provider routing, neuropsych workup, and MRI.",
     "geography": "national",
-    "template": "agilon_journey",
+    "template": "partner_journey",
     "createdAt": "2026-05-29T00:00:00.000Z",
     "updatedAt": "2026-05-29T00:00:00.000Z",
     "authors": [
       "rex"
     ],
     "tags": [
-      "agilon",
+      "partner",
       "cognitive",
       "partner-control"
     ],
-    "catalogVersion": "2.0.0"
+    "catalogVersion": "3.0.0"
   },
   "graph": {
     "nodes": [
       {
-        "id": "pe-01-agilon_referral",
+        "id": "pe-01-partner_referral",
         "type": "pathwayNode",
         "position": {
           "x": 0,
           "y": 0
         },
         "data": {
-          "blockId": "agilon_referral",
+          "blockId": "partner_referral",
           "params": {}
         }
       },
@@ -206,7 +206,7 @@
     "edges": [
       {
         "id": "e-1",
-        "source": "pe-01-agilon_referral",
+        "source": "pe-01-partner_referral",
         "target": "pe-02-mindy_intake",
         "type": "pathwayEdge",
         "data": {

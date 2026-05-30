@@ -18,7 +18,7 @@ Only one literal "Mirza" quote exists in the file, attached to the Decide phase:
 
 > Partner-first control model. Mirza: "they may just want to buy the assessments and have control over the subsequent steps."
 
-The Decide-phase blocks immediately under that quote read as the operationalized version of that thesis: Partner Protocol Junction, Partner Owns Next Step, Amyloid Status Gate (blood-first, PET fallback), APOE-Stratified Consent, and explicit junction nodes for PCP, MDT, Care Navigator, Caregiver, and Payer. The agilon Judy's Story template also exposes two scripted Partner Touchpoints (Route Decision, Workup Decision), which is the same idea told as narrative.
+The Decide-phase blocks immediately under that quote read as the operationalized version of that thesis: Partner Protocol Junction, Partner Owns Next Step, Amyloid Status Gate (blood-first, PET fallback), APOE-Stratified Consent, and explicit junction nodes for PCP, MDT, Care Navigator, Caregiver, and Payer. The partner cognitive journey template also exposes two scripted Partner Touchpoints (Route Decision, Workup Decision), which is the same idea told as narrative.
 
 What that means for the rebuild: the builder needs first-class support for **handoff gates** — nodes whose primary attribute is `whoDecides` (Mindspan, Partner, Payer, Family, Auto), and edges that carry a payload describing what the partner receives at handoff. Plus a few non-obvious requirements that fall out: branch-level `downstreamSwap` (a partner choice mutates the rest of the path), `parallelLanes` (Mindspan and Partner working in parallel), and `effect` multipliers (a partner-controlled branch changes risk/cost math). Any library shortlist has to keep these expressible.
 
@@ -56,7 +56,7 @@ For the rebuild itself, the Conductor app from Melty Labs is well-suited: spin u
 
 ## Open questions before we start the rebuild
 
-There are three things the prototype doesn't answer that will shape the library list. Whether multiplayer/co-editing is in scope (changes the persistence and conflict story — if yes, Yjs + a Liveblocks or PartyKit channel becomes a hard requirement). Whether the partner-handoff gates need to export to a real runtime, for example Conductor OSS workflow JSON or BPMN, so partners can execute the downstream protocol (changes whether we ship our own serializer or target an existing schema). And whether the agilon "Judy's Story" narrative mode is a separate viewer or a first-class authoring affordance inside the same builder.
+There are three things the prototype doesn't answer that will shape the library list. Whether multiplayer/co-editing is in scope (changes the persistence and conflict story — if yes, Yjs + a Liveblocks or PartyKit channel becomes a hard requirement). Whether the partner-handoff gates need to export to a real runtime, for example Conductor OSS workflow JSON or BPMN, so partners can execute the downstream protocol (changes whether we ship our own serializer or target an existing schema). And whether the partner "Judy's Story" narrative mode is a separate viewer or a first-class authoring affordance inside the same builder.
 
 ## Sources
 

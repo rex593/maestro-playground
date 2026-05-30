@@ -3,70 +3,332 @@
     "schemaVersion": 1,
     "id": "agilon-judy-cognitive",
     "title": "agilon — Judy's Story (cognitive)",
-    "description": "Cognitive-decline journey for the agilon partner model. NOTE: this fixture uses the four blocks present in catalog v1.0.0; the full 15-block prototype template requires the prototype HTML's Ff array plus a catalog expansion.",
+    "description": "15-block cognitive-decline journey for the agilon partner model, ported from the Mindspan Visual Care Pathway Builder prototype's agilon_journey template.",
     "geography": "national",
     "template": "agilon_journey",
     "createdAt": "2026-05-29T00:00:00.000Z",
     "updatedAt": "2026-05-29T00:00:00.000Z",
-    "authors": ["rex"],
-    "tags": ["agilon", "cognitive", "partner-control"],
-    "catalogVersion": "1.0.0"
+    "authors": [
+      "rex"
+    ],
+    "tags": [
+      "agilon",
+      "cognitive",
+      "partner-control"
+    ],
+    "catalogVersion": "2.0.0"
   },
   "graph": {
     "nodes": [
       {
-        "id": "pe-entry",
+        "id": "pe-01-agilon_referral",
         "type": "pathwayNode",
-        "position": { "x": 0, "y": 0 },
-        "data": { "blockId": "entry_block", "params": {} }
-      },
-      {
-        "id": "pe-awv",
-        "type": "pathwayNode",
-        "position": { "x": 0, "y": 140 },
-        "data": { "blockId": "entry_awv", "params": {} }
-      },
-      {
-        "id": "pe-moca",
-        "type": "pathwayNode",
-        "position": { "x": 0, "y": 280 },
+        "position": {
+          "x": 0,
+          "y": 0
+        },
         "data": {
-          "blockId": "moca",
-          "params": { "cutoffScore": 26, "administeredBy": "trained_staff" }
+          "blockId": "agilon_referral",
+          "params": {}
         }
       },
       {
-        "id": "pe-handoff",
+        "id": "pe-02-mindy_intake",
         "type": "pathwayNode",
-        "position": { "x": 0, "y": 420 },
+        "position": {
+          "x": 0,
+          "y": 140
+        },
         "data": {
-          "blockId": "junction_partner_handoff",
-          "params": { "handoffPayload": "summary_plus_biomarkers" },
-          "branchSelection": "partner_full_control"
+          "blockId": "mindy_intake",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-03-moca",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 280
+        },
+        "data": {
+          "blockId": "moca",
+          "params": {},
+          "branchSelection": "moca_normal"
+        }
+      },
+      {
+        "id": "pe-04-digital_twin",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 420
+        },
+        "data": {
+          "blockId": "digital_twin",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-05-partner_route_gate",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 560
+        },
+        "data": {
+          "blockId": "partner_route_gate",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-06-mindspan_provider_visit",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 700
+        },
+        "data": {
+          "blockId": "mindspan_provider_visit",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-07-mci_provider_gate",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 840
+        },
+        "data": {
+          "blockId": "mci_provider_gate",
+          "params": {},
+          "branchSelection": "mci_biomarker"
+        }
+      },
+      {
+        "id": "pe-08-neuropsych_eval",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 980
+        },
+        "data": {
+          "blockId": "neuropsych_eval",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-09-neuropsych_results_gate",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 1120
+        },
+        "data": {
+          "blockId": "neuropsych_results_gate",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-10-caregiver_education",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 1260
+        },
+        "data": {
+          "blockId": "caregiver_education",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-11-decline_6mo",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 1400
+        },
+        "data": {
+          "blockId": "decline_6mo",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-12-moca_repeat",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 1540
+        },
+        "data": {
+          "blockId": "moca_repeat",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-13-mci_diagnosis",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 1680
+        },
+        "data": {
+          "blockId": "mci_diagnosis",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-14-partner_workup_gate",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 1820
+        },
+        "data": {
+          "blockId": "partner_workup_gate",
+          "params": {}
+        }
+      },
+      {
+        "id": "pe-15-mri_brain",
+        "type": "pathwayNode",
+        "position": {
+          "x": 0,
+          "y": 1960
+        },
+        "data": {
+          "blockId": "mri_brain",
+          "params": {}
         }
       }
     ],
     "edges": [
       {
-        "id": "e-entry-awv",
-        "source": "pe-entry",
-        "target": "pe-awv",
+        "id": "e-1",
+        "source": "pe-01-agilon_referral",
+        "target": "pe-02-mindy_intake",
         "type": "pathwayEdge",
-        "data": { "kind": "sequential" }
+        "data": {
+          "kind": "sequential"
+        }
       },
       {
-        "id": "e-awv-moca",
-        "source": "pe-awv",
-        "target": "pe-moca",
+        "id": "e-2",
+        "source": "pe-02-mindy_intake",
+        "target": "pe-03-moca",
         "type": "pathwayEdge",
-        "data": { "kind": "sequential" }
+        "data": {
+          "kind": "sequential"
+        }
       },
       {
-        "id": "e-moca-handoff",
-        "source": "pe-moca",
-        "target": "pe-handoff",
+        "id": "e-3",
+        "source": "pe-03-moca",
+        "target": "pe-04-digital_twin",
         "type": "pathwayEdge",
-        "data": { "kind": "handoff", "branchId": "partner_full_control" }
+        "data": {
+          "kind": "sequential"
+        }
+      },
+      {
+        "id": "e-4",
+        "source": "pe-04-digital_twin",
+        "target": "pe-05-partner_route_gate",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "sequential"
+        }
+      },
+      {
+        "id": "e-5",
+        "source": "pe-05-partner_route_gate",
+        "target": "pe-06-mindspan_provider_visit",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "handoff"
+        }
+      },
+      {
+        "id": "e-6",
+        "source": "pe-06-mindspan_provider_visit",
+        "target": "pe-07-mci_provider_gate",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "sequential"
+        }
+      },
+      {
+        "id": "e-7",
+        "source": "pe-07-mci_provider_gate",
+        "target": "pe-08-neuropsych_eval",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "handoff"
+        }
+      },
+      {
+        "id": "e-8",
+        "source": "pe-08-neuropsych_eval",
+        "target": "pe-09-neuropsych_results_gate",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "sequential"
+        }
+      },
+      {
+        "id": "e-9",
+        "source": "pe-09-neuropsych_results_gate",
+        "target": "pe-10-caregiver_education",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "handoff"
+        }
+      },
+      {
+        "id": "e-10",
+        "source": "pe-10-caregiver_education",
+        "target": "pe-11-decline_6mo",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "sequential"
+        }
+      },
+      {
+        "id": "e-11",
+        "source": "pe-11-decline_6mo",
+        "target": "pe-12-moca_repeat",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "sequential"
+        }
+      },
+      {
+        "id": "e-12",
+        "source": "pe-12-moca_repeat",
+        "target": "pe-13-mci_diagnosis",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "sequential"
+        }
+      },
+      {
+        "id": "e-13",
+        "source": "pe-13-mci_diagnosis",
+        "target": "pe-14-partner_workup_gate",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "handoff"
+        }
+      },
+      {
+        "id": "e-14",
+        "source": "pe-14-partner_workup_gate",
+        "target": "pe-15-mri_brain",
+        "type": "pathwayEdge",
+        "data": {
+          "kind": "handoff"
+        }
       }
     ]
   }

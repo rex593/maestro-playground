@@ -1,17 +1,19 @@
 // catalog/catalog.ts
-// Source of truth for the block catalog. Authored in TypeScript so block
-// authors get IntelliSense, exhaustive enum checks, and compile-time errors
-// before any CI runs. `pnpm catalog:build` validates this file with
-// CatalogDocumentSchema and emits the matching catalog/catalog.json that the
-// app + CI consume.
+// Source of truth for the block catalog. Authored in TypeScript so block authors
+// get IntelliSense, exhaustive enum checks, and compile-time errors before CI.
+// `pnpm catalog:build` validates this against CatalogDocumentSchema and emits
+// catalog/catalog.json (consumed by the app + CI).
+//
+// v2.0.0: full catalog ported from the Mindspan Visual Care Pathway Builder
+// prototype (54 blocks across the six categories + gate branches). Supersedes the
+// v1.0.0 placeholder catalog. The four original ids (entry_block, entry_awv, moca,
+// junction_partner_handoff) are preserved.
 //
 // Editing rules:
-//   1. Never remove or rename a `block.id` without bumping the catalogVersion
-//      major and writing a migration in catalog/migrations/.
+//   1. Never remove or rename a `block.id` without bumping the catalogVersion major
+//      and writing a migration in catalog/migrations/.
 //   2. Adding new blocks is a patch bump. Adding paramSchema keys is a minor.
 //   3. Sort blocks alphabetically inside each type group — git diffs stay small.
-//
-// This file is read-only outside of catalog-edit PRs (see CODEOWNERS).
 
 import type {
   CatalogDocument,
@@ -19,118 +21,1112 @@ import type {
   Branch,
 } from "../src/schema/pathway-schema";
 
-const CATALOG_VERSION = "1.0.0";
+const CATALOG_VERSION = "2.0.0";
 
 /* ------------------------------------------------------------------ */
-/* Blocks                                                              */
+/* Blocks (grouped by category, alphabetical within group)             */
 /* ------------------------------------------------------------------ */
 
 const ENTRY: BlockDefinition[] = [
   {
-    id: "entry_block",
-    type: "entry",
-    label: "Entry Block",
-    shortLabel: "Entry",
-    isEntryHub: true,
-    description: "Top-of-funnel hub. Branches to entry routes.",
-    costPerPatient: 0,
-    riskReduction: 0,
-    paramSchema: [],
-    defaultParams: {},
+    "id": "agilon_referral",
+    "type": "entry",
+    "label": "agilon RBE Member Referral",
+    "shortLabel": "agilon Referral",
+    "description": "MA-risk patient referred from agilon-partnered PCP group under risk-bearing entity governance. Pulls HIE + claims data on intake.",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 0,
+    "isEntryRoute": true,
+    "paramSchema": [],
+    "defaultParams": {
+      "riskModel": "MA",
+      "rbeGovernance": "5149"
+    }
   },
   {
-    id: "entry_awv",
-    type: "entry",
-    label: "Annual Wellness Visit",
-    shortLabel: "AWV",
-    isEntryRoute: true,
-    cpt: "G0438",
-    costPerPatient: 175,
-    riskReduction: 2,
-    paramSchema: [],
-    defaultParams: {},
+    "id": "entry_awv",
+    "type": "entry",
+    "label": "Annual Wellness Visit",
+    "shortLabel": "AWV Trigger",
+    "description": "Medicare AWV cognitive screen (G0438 / G0439) auto-enrolls eligible patients",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 0,
+    "cpt": "G0438",
+    "isEntryRoute": true,
+    "paramSchema": [
+      {
+        "kind": "select",
+        "key": "cpt",
+        "label": "AWV code",
+        "defaultValue": "G0438",
+        "options": [
+          {
+            "value": "G0438",
+            "label": "G0438"
+          },
+          {
+            "value": "G0439",
+            "label": "G0439"
+          }
+        ]
+      },
+      {
+        "kind": "select",
+        "key": "frequency",
+        "label": "Cadence",
+        "defaultValue": "annual",
+        "options": [
+          {
+            "value": "annual",
+            "label": "annual"
+          },
+          {
+            "value": "semi-annual",
+            "label": "semi-annual"
+          }
+        ]
+      }
+    ],
+    "defaultParams": {
+      "cpt": "G0438",
+      "frequency": "annual"
+    }
   },
-  // … port the rest of the prototype's entry blocks here
+  {
+    "id": "entry_block",
+    "type": "entry",
+    "label": "Entry Block",
+    "shortLabel": "Entry",
+    "description": "Pathway entry point — click to choose a trigger route (criteria, patient select, risk flag, payer, AWV)",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 0,
+    "isEntryHub": true,
+    "paramSchema": [],
+    "defaultParams": {}
+  },
+  {
+    "id": "entry_criteria",
+    "type": "entry",
+    "label": "Meets Criteria",
+    "shortLabel": "Meets Criteria",
+    "description": "Inclusion/exclusion rule engine — age, MMSE, ICD-10 diagnosis triggers",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 0,
+    "isEntryRoute": true,
+    "paramSchema": [
+      {
+        "kind": "number",
+        "key": "age_min",
+        "label": "Minimum age",
+        "defaultValue": 65,
+        "unit": "yrs",
+        "min": 40,
+        "max": 95,
+        "step": 1
+      },
+      {
+        "kind": "number",
+        "key": "mmse_max",
+        "label": "MMSE ceiling",
+        "defaultValue": 28,
+        "min": 0,
+        "max": 30,
+        "step": 1
+      },
+      {
+        "kind": "multiselect",
+        "key": "icd",
+        "label": "ICD-10 triggers",
+        "defaultValue": [
+          "G30.9",
+          "F03.90"
+        ],
+        "options": [
+          {
+            "value": "G30.9",
+            "label": "G30.9"
+          },
+          {
+            "value": "G30.8",
+            "label": "G30.8"
+          },
+          {
+            "value": "F03.90",
+            "label": "F03.90"
+          },
+          {
+            "value": "F03.91",
+            "label": "F03.91"
+          },
+          {
+            "value": "F02.80",
+            "label": "F02.80"
+          },
+          {
+            "value": "R41.81",
+            "label": "R41.81"
+          },
+          {
+            "value": "R41.9",
+            "label": "R41.9"
+          }
+        ]
+      }
+    ],
+    "defaultParams": {
+      "age_min": 65,
+      "mmse_max": 28,
+      "icd": [
+        "G30.9",
+        "F03.90"
+      ]
+    }
+  },
+  {
+    "id": "entry_patient",
+    "type": "entry",
+    "label": "Patient Selected",
+    "shortLabel": "Patient Selected",
+    "description": "Manual add — care nav / PCP referral / self-referral",
+    "costPerPatient": 0,
+    "evidenceGrade": "B",
+    "riskReduction": 0,
+    "isEntryRoute": true,
+    "paramSchema": [
+      {
+        "kind": "select",
+        "key": "source",
+        "label": "Referral source",
+        "defaultValue": "PCP Referral",
+        "options": [
+          {
+            "value": "PCP Referral",
+            "label": "PCP Referral"
+          },
+          {
+            "value": "Specialist Referral",
+            "label": "Specialist Referral"
+          },
+          {
+            "value": "Care Nav",
+            "label": "Care Nav"
+          },
+          {
+            "value": "Self-Referral",
+            "label": "Self-Referral"
+          },
+          {
+            "value": "Family Member",
+            "label": "Family Member"
+          }
+        ]
+      }
+    ],
+    "defaultParams": {
+      "source": "PCP Referral"
+    }
+  },
+  {
+    "id": "entry_payer",
+    "type": "entry",
+    "label": "Payer-Covered Population",
+    "shortLabel": "Payer Covered",
+    "description": "Plan + benefit filter — only enroll patients with covered benefits",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 0,
+    "isEntryRoute": true,
+    "paramSchema": [
+      {
+        "kind": "select",
+        "key": "plan_type",
+        "label": "Plan type",
+        "defaultValue": "MA",
+        "options": [
+          {
+            "value": "MA",
+            "label": "MA"
+          },
+          {
+            "value": "ACO REACH",
+            "label": "ACO REACH"
+          },
+          {
+            "value": "Commercial",
+            "label": "Commercial"
+          },
+          {
+            "value": "Medicaid",
+            "label": "Medicaid"
+          },
+          {
+            "value": "Dual-Eligible",
+            "label": "Dual-Eligible"
+          }
+        ]
+      },
+      {
+        "kind": "select",
+        "key": "benefit",
+        "label": "Benefit status",
+        "defaultValue": "covered",
+        "options": [
+          {
+            "value": "covered",
+            "label": "covered"
+          },
+          {
+            "value": "prior-auth required",
+            "label": "prior-auth required"
+          },
+          {
+            "value": "not covered",
+            "label": "not covered"
+          }
+        ]
+      }
+    ],
+    "defaultParams": {
+      "plan_type": "MA",
+      "benefit": "covered"
+    }
+  },
+  {
+    "id": "entry_risk",
+    "type": "entry",
+    "label": "Risk Flag Triggered",
+    "shortLabel": "Risk Flag",
+    "description": "Population-risk score threshold — auto-enroll when patients cross threshold",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 0,
+    "isEntryRoute": true,
+    "paramSchema": [
+      {
+        "kind": "number",
+        "key": "threshold",
+        "label": "Score threshold",
+        "defaultValue": 70,
+        "min": 0,
+        "max": 100,
+        "step": 5
+      },
+      {
+        "kind": "select",
+        "key": "model",
+        "label": "Risk model",
+        "defaultValue": "Mindspan Composite",
+        "options": [
+          {
+            "value": "Mindspan Composite",
+            "label": "Mindspan Composite"
+          },
+          {
+            "value": "CAIDE",
+            "label": "CAIDE"
+          },
+          {
+            "value": "LIBRA",
+            "label": "LIBRA"
+          },
+          {
+            "value": "CMS HCC v28",
+            "label": "CMS HCC v28"
+          }
+        ]
+      }
+    ],
+    "defaultParams": {
+      "threshold": 70,
+      "model": "Mindspan Composite"
+    }
+  }
 ];
 
 const ASSESSMENT: BlockDefinition[] = [
   {
-    id: "moca",
-    type: "assessment",
-    label: "MoCA (Montreal Cognitive Assessment)",
-    shortLabel: "MoCA",
-    description: "30-point cognitive screen administered at intake.",
-    costPerPatient: 45,
-    evidenceGrade: "A",
-    riskReduction: 4,
-    cpt: "96132",
-    paramSchema: [
-      {
-        kind: "number",
-        key: "cutoffScore",
-        label: "Cutoff score",
-        defaultValue: 26,
-        min: 18,
-        max: 30,
-        step: 1,
-      },
-      {
-        kind: "select",
-        key: "administeredBy",
-        label: "Administered by",
-        defaultValue: "trained_staff",
-        options: [
-          { value: "trained_staff", label: "Trained staff" },
-          { value: "physician", label: "Physician" },
-          { value: "neuropsych", label: "Neuropsychologist" },
-        ],
-      },
-    ],
-    defaultParams: { cutoffScore: 26, administeredBy: "trained_staff" },
+    "id": "a1c_check",
+    "type": "assessment",
+    "label": "HbA1c Check",
+    "shortLabel": "A1C",
+    "description": "Glycated hemoglobin for diabetes management",
+    "costPerPatient": 35,
+    "evidenceGrade": "A",
+    "riskReduction": 10,
+    "paramSchema": [],
+    "defaultParams": {
+      "targetA1c": 7,
+      "alertThreshold": 9
+    }
   },
-  // … port the rest
+  {
+    "id": "ab4240_csf",
+    "type": "assessment",
+    "label": "Aβ42/40 Ratio (CSF)",
+    "shortLabel": "Aβ42/40 CSF",
+    "description": "Gold-standard CSF amyloid ratio — reflex when plasma equivocal",
+    "costPerPatient": 1050,
+    "evidenceGrade": "A",
+    "riskReduction": 14,
+    "cpt": "83520",
+    "paramSchema": [],
+    "defaultParams": {
+      "includesLP": true
+    }
+  },
+  {
+    "id": "ab4240_plasma",
+    "type": "assessment",
+    "label": "Aβ42/40 Ratio (Plasma)",
+    "shortLabel": "Aβ42/40",
+    "description": "Beta-Amyloid 42/40 Ratio plasma test (Labcorp 505725) — frontline amyloid screen",
+    "costPerPatient": 520,
+    "evidenceGrade": "A",
+    "riskReduction": 12,
+    "cpt": "0206U",
+    "isEdge": true,
+    "paramSchema": [],
+    "defaultParams": {
+      "reflexToCSF": true
+    }
+  },
+  {
+    "id": "amyloid_pet",
+    "type": "assessment",
+    "label": "Amyloid PET",
+    "shortLabel": "Amyloid PET",
+    "description": "Definitive amyloid confirmation (F-18 florbetapir / florbetaben)",
+    "costPerPatient": 4800,
+    "evidenceGrade": "A",
+    "riskReduction": 18,
+    "cpt": "78814",
+    "paramSchema": [],
+    "defaultParams": {
+      "tracer": "florbetapir"
+    }
+  },
+  {
+    "id": "apoe",
+    "type": "assessment",
+    "label": "APOE Genotyping",
+    "shortLabel": "APOE",
+    "description": "Genetic risk stratification for ARIA and treatment routing",
+    "costPerPatient": 250,
+    "evidenceGrade": "A",
+    "riskReduction": 12,
+    "cpt": "81401",
+    "isEdge": true,
+    "paramSchema": [],
+    "defaultParams": {
+      "riskTiers": [
+        "E2/E2",
+        "E3/E3",
+        "E3/E4",
+        "E4/E4"
+      ]
+    }
+  },
+  {
+    "id": "biomarker_panel",
+    "type": "assessment",
+    "label": "ATN Profile",
+    "shortLabel": "ATN Profile",
+    "description": "A+T+N panel: Aβ42/40, p-tau 217, NfL, GFAP (plasma, Labcorp 484400)",
+    "costPerPatient": 880,
+    "evidenceGrade": "A",
+    "riskReduction": 18,
+    "cpt": "0358U",
+    "isBundle": true,
+    "isEdge": true,
+    "paramSchema": [],
+    "defaultParams": {
+      "panels": [
+        "p-tau217",
+        "ab42_40",
+        "nfl",
+        "gfap"
+      ]
+    }
+  },
+  {
+    "id": "fdg_pet",
+    "type": "assessment",
+    "label": "FDG PET",
+    "shortLabel": "FDG PET",
+    "description": "Metabolic imaging for differential diagnosis",
+    "costPerPatient": 2200,
+    "evidenceGrade": "B",
+    "riskReduction": 6,
+    "cpt": "78608",
+    "paramSchema": [],
+    "defaultParams": {}
+  },
+  {
+    "id": "mindspan_provider_visit",
+    "type": "assessment",
+    "label": "Mindspan Provider Visit",
+    "shortLabel": "Mindspan Provider Visit",
+    "description": "Initial provider visit: full cognitive assessment, ADL/IADL review, social history, fall risk, standard dementia-intake evaluation. Lands on a working picture — subtle deficits but ADLs still intact, likely SCD or mild MCI — which sets up the MCI Provider Gate.",
+    "costPerPatient": 240,
+    "evidenceGrade": "A",
+    "riskReduction": 14,
+    "cpt": "99204",
+    "paramSchema": [],
+    "defaultParams": {
+      "domains": [
+        "cognitive",
+        "adl",
+        "iadl",
+        "fall_risk",
+        "social"
+      ],
+      "visitDurationMin": 60
+    }
+  },
+  {
+    "id": "mindy_intake",
+    "type": "assessment",
+    "label": "Mindy AI Intake",
+    "shortLabel": "Mindy Intake",
+    "description": "AI avatar intake — scours HIE + claims, collects history, surfaces gaps before the visit. Not a mocha substitute — it makes the visit efficient so the clinician starts on diagnosis, not data entry.",
+    "costPerPatient": 40,
+    "evidenceGrade": "B",
+    "riskReduction": 9,
+    "isEdge": true,
+    "paramSchema": [],
+    "defaultParams": {
+      "modality": "avatar",
+      "hieSources": [
+        "epic",
+        "athena",
+        "claims"
+      ]
+    }
+  },
+  {
+    "id": "moca",
+    "type": "assessment",
+    "label": "MoCA Cognitive Assessment",
+    "shortLabel": "MoCA",
+    "description": "Montreal Cognitive Assessment - baseline cognitive screening",
+    "costPerPatient": 85,
+    "evidenceGrade": "A",
+    "riskReduction": 8,
+    "cpt": "99483",
+    "paramSchema": [],
+    "defaultParams": {
+      "threshold": 26,
+      "repeatInterval": 6
+    }
+  },
+  {
+    "id": "moca_repeat",
+    "type": "assessment",
+    "label": "MoCA Re-Screen",
+    "shortLabel": "MoCA Repeat",
+    "description": "Repeat Montreal Cognitive Assessment after caregiver-reported decline. Memory + executive function difficulties now present on testing.",
+    "costPerPatient": 85,
+    "evidenceGrade": "A",
+    "riskReduction": 10,
+    "cpt": "99483",
+    "paramSchema": [],
+    "defaultParams": {
+      "threshold": 26,
+      "trigger": "caregiver_decline"
+    }
+  },
+  {
+    "id": "mri_brain",
+    "type": "assessment",
+    "label": "Brain MRI",
+    "shortLabel": "MRI",
+    "description": "Structural brain imaging for ARIA surveillance",
+    "costPerPatient": 1200,
+    "evidenceGrade": "A",
+    "riskReduction": 18,
+    "cpt": "70551",
+    "paramSchema": [],
+    "defaultParams": {
+      "protocol": "ARIA",
+      "cadence": "per-infusion-schedule"
+    }
+  },
+  {
+    "id": "neuropsych_eval",
+    "type": "assessment",
+    "label": "Neuropsych Evaluation",
+    "shortLabel": "Neuropsych",
+    "description": "Comprehensive neuropsychological battery (attention, memory, executive function, language) with integrated interpretive report. Typically 2 to 3 hours billed as 96132 + 2× 96133.",
+    "costPerPatient": 361,
+    "evidenceGrade": "A",
+    "riskReduction": 14,
+    "cpt": "96132",
+    "paramSchema": [],
+    "defaultParams": {
+      "domains": [
+        "attention",
+        "memory",
+        "executive",
+        "language"
+      ],
+      "reportTurnaround": 10
+    }
+  },
+  {
+    "id": "nfl_gfap",
+    "type": "assessment",
+    "label": "NfL + GFAP (Plasma)",
+    "shortLabel": "NfL / GFAP",
+    "description": "Neurodegeneration & astrogliosis markers",
+    "costPerPatient": 420,
+    "evidenceGrade": "B",
+    "riskReduction": 8,
+    "cpt": "84999",
+    "paramSchema": [],
+    "defaultParams": {
+      "panels": [
+        "nfl",
+        "gfap"
+      ]
+    }
+  },
+  {
+    "id": "phq9",
+    "type": "assessment",
+    "label": "PHQ-9 Depression Screen",
+    "shortLabel": "PHQ-9",
+    "description": "Patient Health Questionnaire for depression screening",
+    "costPerPatient": 25,
+    "evidenceGrade": "A",
+    "riskReduction": 6,
+    "paramSchema": [],
+    "defaultParams": {
+      "threshold": 10
+    }
+  },
+  {
+    "id": "ptau217_plasma",
+    "type": "assessment",
+    "label": "p-tau 217 (Plasma)",
+    "shortLabel": "p-tau 217",
+    "description": "Phosphorylated tau 217 — highest single-marker amyloid sensitivity",
+    "costPerPatient": 475,
+    "evidenceGrade": "A",
+    "riskReduction": 15,
+    "cpt": "0412U",
+    "paramSchema": [],
+    "defaultParams": {
+      "cutoff": "age-adjusted"
+    }
+  }
 ];
 
 const DECISION: BlockDefinition[] = [
   {
-    id: "junction_partner_handoff",
-    type: "decision",
-    label: "Partner Owns Next Step",
-    shortLabel: "Partner Handoff",
-    description:
-      "Full handoff to partner after assessment. Partner controls workup, treatment, and follow-up.",
-    isGate: true,
-    whoDecides: "Partner",
-    costPerPatient: 0,
-    riskReduction: 0,
-    paramSchema: [
-      {
-        kind: "select",
-        key: "handoffPayload",
-        label: "Handoff payload",
-        defaultValue: "summary_plus_biomarkers",
-        options: [
-          { value: "summary_only", label: "Summary only" },
-          { value: "summary_plus_biomarkers", label: "Summary + biomarkers" },
-          { value: "full_protocol", label: "Full Mindspan protocol" },
-        ],
-      },
-    ],
-    defaultParams: { handoffPayload: "summary_plus_biomarkers" },
+    "id": "amyloid_status",
+    "type": "decision",
+    "label": "Amyloid Status Gate",
+    "shortLabel": "Amyloid",
+    "description": "Route based on amyloid confirmation for DMT eligibility",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 20,
+    "paramSchema": [],
+    "defaultParams": {
+      "positiveThreshold": "blood_primary",
+      "petFallback": true
+    }
   },
-  // … port the rest of the gates
+  {
+    "id": "apoe_consent",
+    "type": "decision",
+    "label": "APOE-Stratified Consent",
+    "shortLabel": "Consent",
+    "description": "Route consent workflow by APOE genotype and ARIA risk",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 10,
+    "paramSchema": [],
+    "defaultParams": {
+      "e4HomozygoteProtocol": "enhanced"
+    }
+  },
+  {
+    "id": "diabetes_branch",
+    "type": "decision",
+    "label": "Diabetes Decision Gate",
+    "shortLabel": "DM Gate",
+    "description": "Route based on A1C levels and comorbidities",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 14,
+    "paramSchema": [],
+    "defaultParams": {
+      "a1cMild": 7,
+      "a1cModerate": 8.5,
+      "a1cSevere": 10
+    }
+  },
+  {
+    "id": "junction_caregiver",
+    "type": "decision",
+    "label": "Caregiver Input Junction",
+    "shortLabel": "Caregiver Junction",
+    "description": "Family/caregiver preference captured before next step",
+    "costPerPatient": 0,
+    "evidenceGrade": "B",
+    "riskReduction": 4,
+    "isGate": true,
+    "whoDecides": "Family",
+    "paramSchema": [],
+    "defaultParams": {}
+  },
+  {
+    "id": "junction_carenav",
+    "type": "decision",
+    "label": "Mindspan Care Nav Junction",
+    "shortLabel": "Care Nav Junction",
+    "description": "Mindspan care navigator surfaces options and supports decision",
+    "costPerPatient": 95,
+    "evidenceGrade": "B",
+    "riskReduction": 5,
+    "cpt": "99490",
+    "isGate": true,
+    "whoDecides": "Mindspan",
+    "paramSchema": [],
+    "defaultParams": {}
+  },
+  {
+    "id": "junction_mdt",
+    "type": "decision",
+    "label": "Multidisciplinary Team Junction",
+    "shortLabel": "MDT Junction",
+    "description": "Partner-owned multidisciplinary panel reviews case",
+    "costPerPatient": 210,
+    "evidenceGrade": "A",
+    "riskReduction": 7,
+    "cpt": "99367",
+    "isGate": true,
+    "whoDecides": "Partner",
+    "paramSchema": [],
+    "defaultParams": {
+      "teamSize": 3
+    }
+  },
+  {
+    "id": "junction_partner_handoff",
+    "type": "decision",
+    "label": "Partner Owns Next Step",
+    "shortLabel": "Partner Owns Next",
+    "description": "Control hands off to partner protocol — partner clinician drives subsequent care",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 0,
+    "isGate": true,
+    "whoDecides": "Partner",
+    "paramSchema": [],
+    "defaultParams": {
+      "handoff": "full"
+    }
+  },
+  {
+    "id": "junction_partner_review",
+    "type": "decision",
+    "label": "Partner Protocol Junction",
+    "shortLabel": "Partner Junction",
+    "description": "Partner reviews patient state and decides continuation",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 0,
+    "isGate": true,
+    "whoDecides": "Partner",
+    "paramSchema": [],
+    "defaultParams": {
+      "reviewCadence": "per-patient"
+    }
+  },
+  {
+    "id": "junction_payer",
+    "type": "decision",
+    "label": "Payer Authorization Junction",
+    "shortLabel": "Payer Junction",
+    "description": "Prior authorization / coverage gate held by payer",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 0,
+    "isGate": true,
+    "whoDecides": "Payer",
+    "paramSchema": [],
+    "defaultParams": {}
+  },
+  {
+    "id": "junction_pcp",
+    "type": "decision",
+    "label": "Primary Care Junction",
+    "shortLabel": "PCP Junction",
+    "description": "Partner PCP confirms routing before next phase",
+    "costPerPatient": 75,
+    "evidenceGrade": "A",
+    "riskReduction": 3,
+    "cpt": "99214",
+    "isGate": true,
+    "whoDecides": "Partner",
+    "paramSchema": [],
+    "defaultParams": {}
+  },
+  {
+    "id": "mci_diagnosis",
+    "type": "decision",
+    "label": "MCI / Early Dementia Diagnosis",
+    "shortLabel": "MCI Dx + Vascular Concern",
+    "description": "Clear diagnosis: difficulty with IADLs + two affected cognitive domains (memory + executive function). Given CV history, neurologist flags high concern for vascular dementia.",
+    "costPerPatient": 180,
+    "evidenceGrade": "A",
+    "riskReduction": 18,
+    "cpt": "99215",
+    "isGate": true,
+    "whoDecides": "Partner",
+    "paramSchema": [],
+    "defaultParams": {
+      "iadls": true,
+      "domains": [
+        "memory",
+        "executive"
+      ],
+      "dxConcern": "vascular"
+    }
+  },
+  {
+    "id": "mci_provider_gate",
+    "type": "decision",
+    "label": "MCI Provider Preference Gate",
+    "shortLabel": "MCI Provider Gate",
+    "description": "For MoCA scores in the MCI range (18–25), provider group chooses next step: biomarker workup to assess amyloid pathology, or full neuropsychological battery (e.g., Creyos) when biomarkers are declined.",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 12,
+    "isGate": true,
+    "whoDecides": "Partner",
+    "paramSchema": [],
+    "defaultParams": {
+      "range": "18-25"
+    }
+  },
+  {
+    "id": "neuropsych_results_gate",
+    "type": "decision",
+    "label": "Neuropsych Results Gate",
+    "shortLabel": "Neuropsych Results Gate",
+    "description": "Interpret Creyos results: meaningful deficit pattern (route to diagnostic follow-up) vs. within normal aging (route to caregiver education + watchful waiting). Clinician call, surfaced live in the visit.",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 8,
+    "isGate": true,
+    "whoDecides": "Partner",
+    "paramSchema": [],
+    "defaultParams": {
+      "routes": [
+        "meaningful_deficit",
+        "normal_aging"
+      ]
+    }
+  },
+  {
+    "id": "partner_route_gate",
+    "type": "decision",
+    "label": "Partner Touchpoint — Route Decision",
+    "shortLabel": "Partner Route Touchpoint",
+    "description": "After MoCA + Digital Twin, partner group decides: take the results back to their own PCP, or route Judy to a Mindspan provider for the initial dementia-intake visit. Same data, their call.",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 4,
+    "isGate": true,
+    "whoDecides": "Partner",
+    "paramSchema": [],
+    "defaultParams": {
+      "routes": [
+        "agilon_pcp",
+        "mindspan_provider"
+      ]
+    }
+  },
+  {
+    "id": "partner_workup_gate",
+    "type": "decision",
+    "label": "Partner Touchpoint — Workup Decision",
+    "shortLabel": "Partner Workup Touchpoint",
+    "description": "After MCI/early dementia diagnosis with vascular concern, partner group decides next workup step together. This is where things start getting expensive in their mind — so we pause and decide with them.",
+    "costPerPatient": 0,
+    "evidenceGrade": "A",
+    "riskReduction": 6,
+    "isGate": true,
+    "whoDecides": "Partner",
+    "paramSchema": [],
+    "defaultParams": {}
+  },
+  {
+    "id": "risk_strat",
+    "type": "decision",
+    "label": "Risk Stratification",
+    "shortLabel": "Risk Strat",
+    "description": "Stratify patient cohort by clinical risk score",
+    "costPerPatient": 0,
+    "evidenceGrade": "B",
+    "riskReduction": 16,
+    "paramSchema": [],
+    "defaultParams": {
+      "lowRisk": 30,
+      "medRisk": 60,
+      "highRisk": 80
+    }
+  }
 ];
 
 const TREATMENT: BlockDefinition[] = [
-  /* … */
+  {
+    "id": "cv_optimize",
+    "type": "treatment",
+    "label": "CV Risk Optimization",
+    "shortLabel": "CV Optimize",
+    "description": "Cardiovascular risk factor management",
+    "costPerPatient": 950,
+    "evidenceGrade": "A",
+    "riskReduction": 18,
+    "cpt": "99214",
+    "paramSchema": [],
+    "defaultParams": {
+      "bpTarget": "130/80",
+      "statinUse": true
+    }
+  },
+  {
+    "id": "dm_management",
+    "type": "treatment",
+    "label": "Diabetes Mgmt Program",
+    "shortLabel": "DM Program",
+    "description": "Structured diabetes management with targets",
+    "costPerPatient": 1800,
+    "evidenceGrade": "A",
+    "riskReduction": 22,
+    "cpt": "G0108",
+    "paramSchema": [],
+    "defaultParams": {
+      "a1cTarget": 7,
+      "checkInterval": 3
+    }
+  },
+  {
+    "id": "exercise_rx",
+    "type": "treatment",
+    "label": "Exercise Prescription",
+    "shortLabel": "Exercise Rx",
+    "description": "Structured exercise program for modifiable risk",
+    "costPerPatient": 200,
+    "evidenceGrade": "B",
+    "riskReduction": 8,
+    "cpt": "97110",
+    "paramSchema": [],
+    "defaultParams": {
+      "minutesPerWeek": 150
+    }
+  },
+  {
+    "id": "kisunla",
+    "type": "treatment",
+    "label": "Kisunla (Donanemab)",
+    "shortLabel": "Kisunla",
+    "description": "Anti-amyloid IV - stop on amyloid clearance",
+    "costPerPatient": 32000,
+    "evidenceGrade": "A",
+    "riskReduction": 35,
+    "cpt": "J0178",
+    "paramSchema": [],
+    "defaultParams": {
+      "stopOnClearance": true,
+      "avgDuration": 12
+    }
+  },
+  {
+    "id": "leqembi",
+    "type": "treatment",
+    "label": "Leqembi (Lecanemab)",
+    "shortLabel": "Leqembi",
+    "description": "Anti-amyloid IV/SC therapy - continuous treatment",
+    "costPerPatient": 26500,
+    "evidenceGrade": "A",
+    "riskReduction": 27,
+    "cpt": "J0174",
+    "paramSchema": [],
+    "defaultParams": {
+      "route": "IV",
+      "dose": "10mg/kg",
+      "cadence": "q2wk"
+    }
+  },
+  {
+    "id": "pharm_mtm",
+    "type": "treatment",
+    "label": "Pharmacist MTM Visit",
+    "shortLabel": "Pharm MTM",
+    "description": "Pharmacist-led medication therapy management — reconciliation, adherence coaching, deprescribing review, interaction screening. Strong fit after DMT initiation or polypharmacy flag.",
+    "costPerPatient": 82,
+    "evidenceGrade": "A",
+    "riskReduction": 11,
+    "cpt": "99605",
+    "paramSchema": [],
+    "defaultParams": {
+      "cadence": "monthly",
+      "polypharmacyThreshold": 5
+    }
+  }
 ];
 
 const MONITORING: BlockDefinition[] = [
-  /* … */
+  {
+    "id": "between_visit",
+    "type": "monitoring",
+    "label": "Between-Visit Monitoring",
+    "shortLabel": "Remote Mon.",
+    "description": "Mindy AI-powered between-visit patient monitoring",
+    "costPerPatient": 120,
+    "evidenceGrade": "B",
+    "riskReduction": 12,
+    "cpt": "99457",
+    "paramSchema": [],
+    "defaultParams": {
+      "cadence": 7,
+      "aiPowered": true
+    }
+  },
+  {
+    "id": "caregiver_check",
+    "type": "monitoring",
+    "label": "Caregiver Burden Check",
+    "shortLabel": "Caregiver",
+    "description": "Regular caregiver burden assessment and support",
+    "costPerPatient": 75,
+    "evidenceGrade": "B",
+    "riskReduction": 6,
+    "cpt": "99483",
+    "paramSchema": [],
+    "defaultParams": {
+      "cadence": 3
+    }
+  },
+  {
+    "id": "caregiver_education",
+    "type": "monitoring",
+    "label": "Caregiver Watch-For Education",
+    "shortLabel": "Caregiver Education",
+    "description": "When early testing is inconclusive, caregiver is educated on red-flag changes to watch for — missed medications, getting lost driving, IADL regression, personality change — and when to call the PCP.",
+    "costPerPatient": 60,
+    "evidenceGrade": "A",
+    "riskReduction": 7,
+    "paramSchema": [],
+    "defaultParams": {
+      "redFlags": [
+        "medication_adherence",
+        "driving",
+        "iadls",
+        "personality"
+      ]
+    }
+  },
+  {
+    "id": "decline_6mo",
+    "type": "monitoring",
+    "label": "6-Month Caregiver Decline Check-In",
+    "shortLabel": "6-Month Decline Check",
+    "description": "Caregiver reports functional decline — missed medication doses, two episodes of getting lost while driving in the past 3 months. Triggers re-screen.",
+    "costPerPatient": 40,
+    "evidenceGrade": "B",
+    "riskReduction": 10,
+    "paramSchema": [],
+    "defaultParams": {
+      "intervalMonths": 6,
+      "triggersMoCARepeat": true
+    }
+  },
+  {
+    "id": "lab_followup",
+    "type": "monitoring",
+    "label": "Lab Follow-up",
+    "shortLabel": "Labs F/U",
+    "description": "Scheduled lab re-checks based on pathway parameters",
+    "costPerPatient": 180,
+    "evidenceGrade": "A",
+    "riskReduction": 10,
+    "cpt": "80053",
+    "paramSchema": [],
+    "defaultParams": {
+      "cadence": 3
+    }
+  },
+  {
+    "id": "mri_surveillance",
+    "type": "monitoring",
+    "label": "MRI Surveillance",
+    "shortLabel": "MRI Surv.",
+    "description": "Drug-specific MRI schedule for ARIA detection",
+    "costPerPatient": 3600,
+    "evidenceGrade": "A",
+    "riskReduction": 22,
+    "cpt": "70553",
+    "paramSchema": [],
+    "defaultParams": {
+      "ariaAlert": true
+    }
+  }
 ];
 
 const OUTCOME: BlockDefinition[] = [
-  /* … */
+  {
+    "id": "digital_twin",
+    "type": "outcome",
+    "label": "Digital Twin Projection",
+    "shortLabel": "Digital Twin",
+    "description": "AI-generated outcome projection based on pathway config",
+    "costPerPatient": 300,
+    "evidenceGrade": "B",
+    "riskReduction": 15,
+    "isEdge": true,
+    "paramSchema": [],
+    "defaultParams": {
+      "horizonMonths": 18
+    }
+  },
+  {
+    "id": "outcome_home_year",
+    "type": "outcome",
+    "label": "Home-Stay Projection (+12 mo)",
+    "shortLabel": "+1yr @ Home",
+    "description": "Caregiver-facing projection: compliant pathway keeps patient at home ~1 year longer. Memory care unit cost avoidance per patient.",
+    "costPerPatient": 0,
+    "evidenceGrade": "B",
+    "riskReduction": 22,
+    "paramSchema": [],
+    "defaultParams": {
+      "horizonMonths": 24,
+      "mcUnitAvoidance": 84000
+    }
+  },
+  {
+    "id": "outcome_report",
+    "type": "outcome",
+    "label": "Outcome Dashboard",
+    "shortLabel": "Dashboard",
+    "description": "Population-level outcome tracking and reporting",
+    "costPerPatient": 50,
+    "evidenceGrade": "A",
+    "riskReduction": 5,
+    "cpt": "99091",
+    "paramSchema": [],
+    "defaultParams": {}
+  }
 ];
 
 /* ------------------------------------------------------------------ */
@@ -138,38 +1134,379 @@ const OUTCOME: BlockDefinition[] = [
 /* ------------------------------------------------------------------ */
 
 const BRANCHES: Record<string, Branch[]> = {
-  junction_partner_handoff: [
+  "ab4240_plasma": [
     {
-      id: "partner_full_control",
-      label: "Partner takes full control",
-      whoDecides: "Partner",
-      effect: 1.0,
-      isDefault: true,
-      note: 'Mirza: "they may just want to buy the assessments and have control over the subsequent steps"',
+      "id": "ab_auto",
+      "label": "Auto-reflex",
+      "whoDecides": "Mindspan",
+      "note": "Reflex to CSF if equivocal",
+      "effect": 1,
+      "isDefault": true
     },
     {
-      id: "shared_oversight",
-      label: "Shared oversight with Mindspan",
-      whoDecides: "Partner",
-      effect: 1.1,
+      "id": "ab_partner",
+      "label": "Partner reviews",
+      "whoDecides": "Partner",
+      "note": "Partner signs off on reflex",
+      "effect": 1
     },
+    {
+      "id": "ab_payer",
+      "label": "Payer pre-auth",
+      "whoDecides": "Payer",
+      "note": "Benefit check required",
+      "effect": 0.8
+    }
   ],
-  amyloid_status: [
+  "amyloid_status": [
     {
-      id: "amyloid_positive",
-      label: "Amyloid positive → PET confirmation",
-      whoDecides: "Auto",
-      effect: 1.0,
-      isDefault: true,
+      "id": "amyl_pos",
+      "label": "Amyloid +",
+      "whoDecides": "Mindspan",
+      "note": "Route to DMT track",
+      "effect": 1,
+      "isDefault": true
     },
     {
-      id: "amyloid_negative",
-      label: "Amyloid negative → monitoring",
-      whoDecides: "Auto",
-      effect: 0.6,
+      "id": "amyl_neg",
+      "label": "Amyloid −",
+      "whoDecides": "Mindspan",
+      "note": "Route to modifiable risk",
+      "effect": 0.6,
+      "downstreamSwap": {
+        "leqembi": "cv_optimize",
+        "kisunla": "exercise_rx"
+      }
     },
+    {
+      "id": "amyl_indet",
+      "label": "Indeterminate",
+      "whoDecides": "Partner",
+      "note": "Partner decides reflex",
+      "effect": 0.8,
+      "downstreamSwap": {
+        "leqembi": "ab4240_csf",
+        "kisunla": "ab4240_csf"
+      }
+    },
+    {
+      "id": "amyl_parallel",
+      "label": "Compare branches — DMT vs modifiable-risk",
+      "whoDecides": "Mindspan",
+      "note": "Primary arm bold; alternate arm dimmed. Extend either independently.",
+      "effect": 1,
+      "parallelLanes": [
+        {
+          "label": "DMT arm",
+          "color": "#ff4fbf",
+          "blocks": [
+            "leqembi",
+            "mri_surveillance"
+          ]
+        },
+        {
+          "label": "Modifiable risk",
+          "color": "#00e5ff",
+          "blocks": [
+            "cv_optimize",
+            "exercise_rx"
+          ]
+        }
+      ]
+    }
   ],
-  // … port the rest
+  "apoe": [
+    {
+      "id": "apoe_auto",
+      "label": "Auto-stratify",
+      "whoDecides": "Mindspan",
+      "note": "Auto-route E4 to enhanced",
+      "effect": 1,
+      "isDefault": true
+    },
+    {
+      "id": "apoe_partner",
+      "label": "Partner reviews",
+      "whoDecides": "Partner",
+      "effect": 1
+    },
+    {
+      "id": "apoe_family",
+      "label": "Family consented",
+      "whoDecides": "Family",
+      "note": "Genetic consent captured",
+      "effect": 1
+    }
+  ],
+  "diabetes_branch": [
+    {
+      "id": "dm_std",
+      "label": "Standard DM pathway",
+      "whoDecides": "Mindspan",
+      "note": "Medication-led",
+      "effect": 1,
+      "isDefault": true
+    },
+    {
+      "id": "dm_intensive",
+      "label": "Intensive (A1C > 9)",
+      "whoDecides": "Partner",
+      "note": "Endo referral",
+      "effect": 0.85
+    },
+    {
+      "id": "dm_parallel",
+      "label": "Compare branches — meds vs lifestyle",
+      "whoDecides": "Mindspan",
+      "note": "Primary arm bold; alternate arm dimmed. Extend either independently.",
+      "effect": 1,
+      "parallelLanes": [
+        {
+          "label": "Pharmacologic arm",
+          "color": "#ff4fbf",
+          "blocks": [
+            "dm_management",
+            "lab_followup"
+          ]
+        },
+        {
+          "label": "Lifestyle arm",
+          "color": "#00e5ff",
+          "blocks": [
+            "exercise_rx",
+            "caregiver_check"
+          ]
+        }
+      ]
+    }
+  ],
+  "junction_partner_handoff": [
+    {
+      "id": "jph_accept",
+      "label": "Partner accepts",
+      "whoDecides": "Partner",
+      "effect": 1,
+      "isDefault": true
+    },
+    {
+      "id": "jph_return",
+      "label": "Return to Mindspan",
+      "whoDecides": "Partner",
+      "note": "Bounce back for care nav",
+      "effect": 0.8
+    },
+    {
+      "id": "jph_payer",
+      "label": "Escalate to payer",
+      "whoDecides": "Payer",
+      "note": "Prior auth required",
+      "effect": 0.6
+    }
+  ],
+  "leqembi": [
+    {
+      "id": "leq_continue",
+      "label": "Continue therapy",
+      "whoDecides": "Mindspan",
+      "effect": 1,
+      "isDefault": true
+    },
+    {
+      "id": "leq_pause",
+      "label": "Pause for ARIA",
+      "whoDecides": "Mindspan",
+      "note": "Hold until MRI clears",
+      "effect": 0.6,
+      "downstreamSwap": {
+        "between_visit": "mri_surveillance"
+      }
+    },
+    {
+      "id": "leq_switch",
+      "label": "Switch DMT",
+      "whoDecides": "Partner",
+      "note": "Move to Kisunla",
+      "effect": 0.85
+    },
+    {
+      "id": "leq_handoff",
+      "label": "Partner owns f/u",
+      "whoDecides": "Partner",
+      "effect": 0.9
+    },
+    {
+      "id": "leq_pharm",
+      "label": "Pharmacist co-manage",
+      "whoDecides": "Mindspan",
+      "note": "Add MTM visits (99605/99606) for adherence + interaction screening",
+      "effect": 1.08,
+      "downstreamSwap": {
+        "lab_followup": "pharm_mtm"
+      }
+    }
+  ],
+  "mci_provider_gate": [
+    {
+      "id": "mci_biomarker",
+      "label": "Biomarker workup (amyloid pathology)",
+      "whoDecides": "Partner",
+      "note": "Group engages with biomarkers — reflex to plasma Aβ42/40 then amyloid status gate",
+      "effect": 1,
+      "isDefault": true,
+      "downstreamSwap": {
+        "neuropsych_eval": "ab4240_plasma"
+      }
+    },
+    {
+      "id": "mci_neuropsych",
+      "label": "Full neuropsych battery (Creyos)",
+      "whoDecides": "Partner",
+      "note": "Group declines biomarkers — Creyos digital cognitive battery + interpretive report (96132/96133)",
+      "effect": 1,
+      "downstreamSwap": {
+        "ab4240_plasma": "neuropsych_eval",
+        "amyloid_status": "phq9",
+        "leqembi": "caregiver_check"
+      }
+    }
+  ],
+  "moca": [
+    {
+      "id": "moca_normal",
+      "label": "Normal (≥ 26) — recheck 6-12 mo",
+      "whoDecides": "Mindspan",
+      "note": "Low-touch monitoring, no biomarker workup",
+      "effect": 0.85,
+      "isDefault": true,
+      "downstreamSwap": {
+        "ab4240_plasma": "between_visit",
+        "apoe": "caregiver_check",
+        "amyloid_status": "between_visit",
+        "leqembi": "between_visit",
+        "mri_surveillance": "caregiver_check"
+      }
+    },
+    {
+      "id": "moca_mci",
+      "label": "MCI (18-25) — provider chooses biomarker vs neuropsych",
+      "whoDecides": "Partner",
+      "note": "Dr. Reddy flow: if group engages with biomarkers, route to Aβ42/40 reflex; otherwise full neuropsych (Creyos). Add CV/DM risk management, reassess in 3 months.",
+      "effect": 1,
+      "downstreamSwap": {
+        "ab4240_plasma": "mci_provider_gate",
+        "leqembi": "cv_optimize",
+        "kisunla": "dm_management"
+      }
+    },
+    {
+      "id": "moca_severe",
+      "label": "Impaired (< 18) — biomarker + neuropsych",
+      "whoDecides": "Partner",
+      "note": "Full biomarker confirmation + comprehensive neuropsych battery (96132/96133)",
+      "effect": 1.1,
+      "downstreamSwap": {
+        "phq9": "neuropsych_eval"
+      }
+    },
+    {
+      "id": "moca_compare",
+      "label": "Compare branches — all 3 severity arms",
+      "whoDecides": "Mindspan",
+      "note": "Render Normal, MCI, and Impaired pathways side-by-side. Primary bold; alternates dimmed.",
+      "effect": 1,
+      "parallelLanes": [
+        {
+          "label": "MCI (18-25) arm — provider preference",
+          "color": "#ff4fbf",
+          "blocks": [
+            "mci_provider_gate",
+            "ab4240_plasma",
+            "amyloid_status"
+          ]
+        },
+        {
+          "label": "Impaired (< 18) arm",
+          "color": "#00e5ff",
+          "blocks": [
+            "neuropsych_eval",
+            "mri_surveillance"
+          ]
+        }
+      ]
+    }
+  ],
+  "mri_surveillance": [
+    {
+      "id": "mri_normal",
+      "label": "Normal",
+      "whoDecides": "Mindspan",
+      "effect": 1,
+      "isDefault": true
+    },
+    {
+      "id": "mri_abnormal",
+      "label": "Abnormal — flag",
+      "whoDecides": "Partner",
+      "note": "Escalate to neuro",
+      "effect": 0.7
+    }
+  ],
+  "risk_strat": [
+    {
+      "id": "rs_high",
+      "label": "High risk",
+      "whoDecides": "Mindspan",
+      "note": "Full pathway",
+      "effect": 1,
+      "isDefault": true
+    },
+    {
+      "id": "rs_med",
+      "label": "Medium risk",
+      "whoDecides": "Mindspan",
+      "note": "Monitoring-led",
+      "effect": 0.75,
+      "downstreamSwap": {
+        "leqembi": "cv_optimize"
+      }
+    },
+    {
+      "id": "rs_low",
+      "label": "Low risk",
+      "whoDecides": "Partner",
+      "note": "Partner low-touch follow",
+      "effect": 0.5,
+      "downstreamSwap": {
+        "leqembi": "cv_optimize",
+        "mri_surveillance": "between_visit"
+      }
+    },
+    {
+      "id": "rs_parallel",
+      "label": "Compare branches — clinical vs behavioral",
+      "whoDecides": "Mindspan",
+      "note": "Primary arm bold; alternate arm dimmed. Extend either independently.",
+      "effect": 1,
+      "parallelLanes": [
+        {
+          "label": "Clinical track",
+          "color": "#ff4fbf",
+          "blocks": [
+            "cv_optimize",
+            "dm_management"
+          ]
+        },
+        {
+          "label": "Behavioral track",
+          "color": "#00e5ff",
+          "blocks": [
+            "phq9",
+            "caregiver_check"
+          ]
+        }
+      ]
+    }
+  ]
 };
 
 /* ------------------------------------------------------------------ */

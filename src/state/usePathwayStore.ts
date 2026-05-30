@@ -22,11 +22,11 @@ import {
 import {
   makeEmptyPathway,
   detectCatalogDrift,
-  PathwayDocumentSchema,
   type PathwayDocument,
   type CatalogDriftReport,
 } from "@/schema/pathway-schema";
 import { catalog, catalogVersion, getBlock } from "./catalog";
+import { toDocument } from "@/io/serialize";
 
 // The schema exports Zod schemas but not these standalone type aliases, and the
 // schema file is locked — so derive them from the exported PathwayDocument type.
@@ -95,6 +95,7 @@ export interface PathwayState {
   loadPathway: (doc: PathwayDocument) => { drift: CatalogDriftReport };
   savePathway: () => PathwayDocument;
   setLastDrift: (drift: CatalogDriftReport | null) => void;
+  recomputeDrift: () => CatalogDriftReport;
 
   // Selection
   selectNode: (nodeId: string | null) => void;
@@ -126,46 +127,6 @@ function makeNode(
       params: { ...(def?.defaultParams ?? {}) },
     },
   };
-}
-
-/** Serialize current store state into a validated PathwayDocument. */
-function toDocument(state: PathwayState): PathwayDocument {
-  const now = new Date().toISOString();
-  const doc: PathwayDocument = {
-    meta: { ...state.meta, catalogVersion, updatedAt: now },
-    graph: {
-      nodes: state.nodes.map((n) => ({
-        id: n.id,
-        type: n.type ?? "pathwayNode",
-        position: n.position,
-        data: {
-          blockId: n.data.blockId,
-          params: n.data.params ?? {},
-          branchSelection: n.data.branchSelection,
-          lane: n.data.lane,
-          forkId: n.data.forkId,
-          laneIndex: n.data.laneIndex,
-          notes: n.data.notes,
-        },
-        width: n.width ?? undefined,
-        height: n.height ?? undefined,
-      })),
-      edges: state.edges.map((e) => ({
-        id: e.id,
-        source: e.source,
-        target: e.target,
-        sourceHandle: e.sourceHandle ?? undefined,
-        targetHandle: e.targetHandle ?? undefined,
-        type: e.type ?? "pathwayEdge",
-        data: {
-          kind: e.data?.kind ?? "sequential",
-          branchId: e.data?.branchId,
-          label: e.data?.label,
-        },
-      })),
-    },
-  };
-  return PathwayDocumentSchema.parse(doc);
 }
 
 /* ------------------------------------------------------------------ */
@@ -276,6 +237,12 @@ export const usePathwayStore = create<PathwayState>()(
       savePathway: () => toDocument(get()),
 
       setLastDrift: (drift) => set({ lastDrift: drift }),
+
+      recomputeDrift: () => {
+        const drift = detectCatalogDrift(toDocument(get()), catalog);
+        set({ lastDrift: hasDrift(drift) ? drift : null });
+        return drift;
+      },
 
       selectNode: (nodeId) =>
         set({ selectedNodeId: nodeId, selectedEdgeId: null }),

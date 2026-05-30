@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "id": "agilon-judy-cognitive",
+    "title": "agilon — Judy's Story (cognitive)",
+    "description": "Cognitive-decline journey for the agilon partner model. NOTE: this fixture uses the four blocks present in catalog v1.0.0; the full 15-block prototype template requires the prototype HTML's Ff array plus a catalog expansion.",
+    "geography": "national",
+    "template": "agilon_journey",
+    "createdAt": "2026-05-29T00:00:00.000Z",
+    "updatedAt": "2026-05-29T00:00:00.000Z",
+    "authors": ["rex"],
+    "tags": ["agilon", "cognitive", "partner-control"],
+    "catalogVersion": "1.0.0"
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "pe-entry",
+        "type": "pathwayNode",
+        "position": { "x": 0, "y": 0 },
+        "data": { "blockId": "entry_block", "params": {} }
+      },
+      {
+        "id": "pe-awv",
+        "type": "pathwayNode",
+        "position": { "x": 0, "y": 140 },
+        "data": { "blockId": "entry_awv", "params": {} }
+      },
+      {
+        "id": "pe-moca",
+        "type": "pathwayNode",
+        "position": { "x": 0, "y": 280 },
+        "data": {
+          "blockId": "moca",
+          "params": { "cutoffScore": 26, "administeredBy": "trained_staff" }
+        }
+      },
+      {
+        "id": "pe-handoff",
+        "type": "pathwayNode",
+        "position": { "x": 0, "y": 420 },
+        "data": {
+          "blockId": "junction_partner_handoff",
+          "params": { "handoffPayload": "summary_plus_biomarkers" },
+          "branchSelection": "partner_full_control"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e-entry-awv",
+        "source": "pe-entry",
+        "target": "pe-awv",
+        "type": "pathwayEdge",
+        "data": { "kind": "sequential" }
+      },
+      {
+        "id": "e-awv-moca",
+        "source": "pe-awv",
+        "target": "pe-moca",
+        "type": "pathwayEdge",
+        "data": { "kind": "sequential" }
+      },
+      {
+        "id": "e-moca-handoff",
+        "source": "pe-moca",
+        "target": "pe-handoff",
+        "type": "pathwayEdge",
+        "data": { "kind": "handoff", "branchId": "partner_full_control" }
+      }
+    ]
+  }
+}

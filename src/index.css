@@ -62,3 +62,13 @@
     height: 100%;
   }
 }
+
+/* Animated dashed flow for PathwayEdge. */
+@keyframes pathway-dash {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -18;
+  }
+}
